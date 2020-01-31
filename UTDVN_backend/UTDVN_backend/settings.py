@@ -79,9 +79,11 @@ DATABASES = {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'utdvn',
         'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
+        'PASSWORD': 'root',
+        'HOST': 'db',
         'PORT': '3306',
+        'default-character-set': 'utf8',
+        'TIME_ZONE': 'Asia/Saigon',
     }
 }
 
