@@ -3,7 +3,6 @@ version: '3.7'
 services:
   db:
     image: mysql:8.0
-    container_name: db
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     volumes:
@@ -36,6 +35,7 @@ services:
 
   web:
     image: newluminous/utdvn
+    container_name: utdvn_web
     command: python3 UTDVN_backend/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/home/utdvn
