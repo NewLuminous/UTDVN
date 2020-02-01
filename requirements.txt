@@ -1,3 +1,5 @@
-Django>=3
+Django==3.0.2
+django-haystack==2.8.1
 mysqlclient==1.4.6
+pysolr==3.8.1
 Scrapy==1.8.0

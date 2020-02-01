@@ -7,7 +7,7 @@ services:
     restart: always
     volumes:
       - db_data:/var/lib/mysql
-      - /db_cnf/mycustom.cnf:/etc/mysql/conf.d/custom.cnf
+      - /fixs/db_cnf/custom.cnf:/etc/mysql/conf.d/custom.cnf
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: utdvn
@@ -35,10 +35,16 @@ services:
 
   web:
     image: newluminous/utdvn
-    container_name: utdvn_web
     command: python3 UTDVN_backend/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/home/utdvn
+      - ./fixs/web_haystack/backends__init__.py:/usr/local/lib/python3.8/site-packages/haystack/backends/__init__.py
+      - ./fixs/web_haystack/highlight.py:/usr/local/lib/python3.8/site-packages/haystack/templatetags/highlight.py
+      - ./fixs/web_haystack/utils__init__.py:/usr/local/lib/python3.8/site-packages/haystack/utils/__init__.py
+      - ./fixs/web_haystack/loading.py:/usr/local/lib/python3.8/site-packages/haystack/utils/loading.py
+      - ./fixs/web_haystack/inputs.py:/usr/local/lib/python3.8/site-packages/haystack/inputs.py
+      - ./fixs/web_haystack/models.py:/usr/local/lib/python3.8/site-packages/haystack/models.py
+      - ./fixs/web_haystack/query.py:/usr/local/lib/python3.8/site-packages/haystack/query.py
     ports:
       - "8000:8000"
     depends_on:

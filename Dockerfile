@@ -1,5 +1,5 @@
-# Use python:3 as the base Docker image
-FROM python:3
+# Use python:3.8 as the base Docker image
+FROM python:3.8
 # Set current working directory in the container
 WORKDIR /home/utdvn
 # Copy requirements into the docker container
