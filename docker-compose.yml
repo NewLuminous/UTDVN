@@ -20,7 +20,7 @@ services:
       PMA_HOST: db
       PMA_PORT: 3306
     ports:
-      - "8080:80"
+      - "8888:80"
     links:
       - db
 

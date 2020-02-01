@@ -22,6 +22,8 @@ $ docker-compose exec web bash
 root@de5d08a4ea6e:/home/utdvn# cd UTDVN_backend
 # Run migrations
 root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py migrate
+# Create Django admin user
+root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py createsuperuser
 # Start Django server
 root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py runserver 0.0.0.0:8000
 ```
