@@ -1,0 +1,17 @@
+language: python
+
+python:
+  - 3.8
+
+services: 
+  - mysql
+
+install:
+  - pip install -r requirements.txt
+
+before_script:
+  - mysql -e 'CREATE DATABASE test;' -u root
+
+script:
+  - python manage.py test UTDVN_backend.tests
+  - python manage.py test UTDVN_crawler.tests

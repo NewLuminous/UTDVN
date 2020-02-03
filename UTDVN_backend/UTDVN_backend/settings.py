@@ -78,18 +78,32 @@ WSGI_APPLICATION = 'UTDVN_backend.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'utdvn',
-        'USER': 'root',
-        'PASSWORD': 'root',
-        'HOST': 'db',
-        'PORT': '3306',
-        'default-character-set': 'utf8',
-        'TIME_ZONE': 'Asia/Saigon',
+if 'TRAVIS' in os.environ:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'test',
+            'USER': 'root',
+            'PASSWORD': 'root',
+            'HOST': 'db',
+            'PORT': '3306',
+            'default-character-set': 'utf8',
+            'TIME_ZONE': 'Asia/Saigon',
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'utdvn',
+            'USER': 'root',
+            'PASSWORD': 'root',
+            'HOST': 'db',
+            'PORT': '3306',
+            'default-character-set': 'utf8',
+            'TIME_ZONE': 'Asia/Saigon',
+        }
+    }
 
 HAYSTACK_CONNECTIONS = {
     'default': {
