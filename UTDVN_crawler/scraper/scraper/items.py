@@ -8,7 +8,15 @@
 import scrapy
 
 
-class ScraperItem(scrapy.Item):
+class Thesis(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
-    pass
+    title = scrapy.Field()
+    author = scrapy.Field()
+    advisor = scrapy.Field()
+    publish_date = scrapy.Field()
+    publisher = scrapy.Field()
+    abstract = scrapy.Field()
+    url = scrapy.Field()
+    pdf_url = scrapy.Field()
+    language = scrapy.Field()
+    keywords = scrapy.Field()
