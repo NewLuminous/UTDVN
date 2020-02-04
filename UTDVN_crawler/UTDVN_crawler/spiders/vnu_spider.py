@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import scrapy
+from UTDVN_crawler.items import Thesis
 
 class VNUSpider(scrapy.Spider):
     name = "vnu"
@@ -31,17 +32,15 @@ class VNUSpider(scrapy.Spider):
         def extract_meta(name):
             return response.xpath('//meta[re:test(@name,".*%s$")]/@content' % name).get(default='').strip()
         
-        item = {
-            'title': extract_meta('title'),
-            'author': extract_meta('creator'),
-            'advisor': extract_meta('contributor'),
-            'publish_date': extract_meta('citation_date'),
-            'publisher': extract_meta('publisher'),
-            'abstract': extract_meta('abstract'),
-            'url': extract_meta('identifier'),
-            'pdf_url': extract_meta('pdf_url'),
-            'language': extract_meta('language'),
-            'keywords': extract_meta('keywords'),
-        }
-        with open('output.txt', 'a') as f:
-            f.write(str(item) + '\n')
+        item = Thesis()
+        item['title'] = extract_meta('title')
+        item['author'] = extract_meta('creator')
+        item['advisor'] = extract_meta('contributor')
+        item['publish_date'] = extract_meta('citation_date')
+        item['publisher'] = extract_meta('publisher')
+        item['abstract'] = extract_meta('abstract')
+        item['uri'] = extract_meta('identifier')
+        item['file_url'] = extract_meta('pdf_url')
+        item['language'] = extract_meta('language')
+        item['keywords'] = extract_meta('keywords')
+        yield item
