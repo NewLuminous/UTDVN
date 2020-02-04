@@ -13,5 +13,5 @@ before_script:
   - mysql -e 'CREATE DATABASE test;' -u root
 
 script:
-  - python manage.py test UTDVN_backend.tests
-  - python manage.py test UTDVN_crawler.tests
+  - python UTDVN_backend/manage.py test UTDVN_backend.tests
+  - python UTDVN_backend/manage.py test UTDVN_crawler.tests
