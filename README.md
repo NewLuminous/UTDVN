@@ -7,6 +7,7 @@ Search engine service backed by Apache Solr, Django and Scrapy for undergraduate
 [Solr Tutorial](https://lucene.apache.org/solr/guide/8_4/solr-tutorial.html/)<br/>
 [Scrapy Video Tutorials](https://scrapinghub.com/learn-scrapy/)<br/>
 [Getting Started with Haystack](https://django-haystack.readthedocs.io/en/master/tutorial.html#)
+[Travis CI Tutorial](https://docs.travis-ci.com/user/tutorial/)
 
 ## Installation
 - Install Docker
