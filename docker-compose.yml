@@ -7,6 +7,7 @@ services:
     restart: always
     volumes:
       - db_data:/var/lib/mysql
+      # Fix "Authentication plugin 'caching_sha2_password' cannot be loaded" error in MySQL 8.0
       - /fixs/db_cnf/custom.cnf:/etc/mysql/conf.d/custom.cnf
     environment:
       MYSQL_ROOT_PASSWORD: root
@@ -38,6 +39,8 @@ services:
     command: python3 UTDVN_backend/manage.py runserver 0.0.0.0:8000
     volumes:
       - .:/home/utdvn
+      # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
+      # Will be removed when future versions of django-haystack support Django 3.0
       - ./fixs/web_haystack/backends__init__.py:/usr/local/lib/python3.8/site-packages/haystack/backends/__init__.py
       - ./fixs/web_haystack/solr_backend.py:/usr/local/lib/python3.8/site-packages/haystack/backends/solr_backend.py
       - ./fixs/web_haystack/highlight.py:/usr/local/lib/python3.8/site-packages/haystack/templatetags/highlight.py

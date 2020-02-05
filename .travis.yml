@@ -12,7 +12,9 @@ install:
 before_script:
   - mysql -e 'CREATE DATABASE test;' -u root
 
-script: 
+script:
+  # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
+  # Will be removed when future versions of django-haystack support Django 3.0
   - bash ./fixs/web_haystack/script.sh
   - python UTDVN_backend/manage.py test UTDVN_backend.tests
   - python UTDVN_backend/manage.py test UTDVN_crawler.tests
