@@ -2,10 +2,10 @@
 Search engine service backed by Apache Solr, Django and Scrapy for undergraduate theses and dissertations
 
 ### Useful Links
-[Getting Started with Docker](https://docs.docker.com/get-started/)
-[Getting Started with Django](https://www.djangoproject.com/start/)
-[Solr Tutorial](https://lucene.apache.org/solr/guide/8_4/solr-tutorial.html/)
-[Scrapy Video Tutorials](https://scrapinghub.com/learn-scrapy/)
+[Getting Started with Docker](https://docs.docker.com/get-started/)<br/>
+[Getting Started with Django](https://www.djangoproject.com/start/)<br/>
+[Solr Tutorial](https://lucene.apache.org/solr/guide/8_4/solr-tutorial.html/)<br/>
+[Scrapy Video Tutorials](https://scrapinghub.com/learn-scrapy/)<br/>
 [Getting Started with Haystack](https://django-haystack.readthedocs.io/en/master/tutorial.html#)
 
 ## Installation

@@ -1,0 +1,16 @@
+{% extends "UTDVN_database/base.html" %}
+{% block title %}Index Page{% endblock %}
+{% block content %}
+    <h1>Latest theses:</h1>
+    {% if latest_thesis_list %}
+    <ul>
+        {% for thesis in latest_thesis_list %}
+        <li><a href="{% url 'UTDVN_database:index' %}">{{ thesis.title }}</a></li>
+        {% endfor %}
+    </ul>
+
+    {% else %}
+    <p>No theses are available.</p>
+
+    {% endif %}
+{% endblock %}

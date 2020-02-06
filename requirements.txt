@@ -1,6 +1,7 @@
 Django==3.0.2
 django-cors-headers==3.2.1
 django-haystack==2.8.1
+docutils==0.15.2
 mysqlclient==1.4.6
 pysolr==3.8.1
 Scrapy==1.8.0

@@ -16,4 +16,5 @@ bash:
 	docker exec -it utdvn_web bash
 
 migrate:
+	docker exec -it utdvn_web python3 UTDVN_backend/manage.py makemigrations
 	docker exec -it utdvn_web python3 UTDVN_backend/manage.py migrate
