@@ -7,7 +7,6 @@
 
 import scrapy
 
-
 class Thesis(scrapy.Item):
     title = scrapy.Field()
     author = scrapy.Field()

@@ -6,8 +6,9 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy.exceptions import DropItem
 from scrapy.exporters import JsonLinesItemExporter
+from UTDVN_database.solr.connection import add_item
 
-# Look for duplicate items, and drop those items that were already processed
+# Looks for duplicate items, and drop those items that were already processed
 class DuplicatesPipeline(object):
     def __init__(self):
         self.ids_seen = set()
@@ -19,7 +20,7 @@ class DuplicatesPipeline(object):
             self.ids_seen.add(item['title'] + item['author'])
             return item
 
-# Export items to a JSON file
+# Exports items to a JSON file
 class JsonExporterPipeline(object):
     def __init__(self, file_name):
         self.file_name = file_name
@@ -40,4 +41,11 @@ class JsonExporterPipeline(object):
     
     def process_item(self, item, spider):
         self.exporter.export_item(item)
+        return item
+    
+# Stores items in Solr
+class SolrPipeline(object):
+    def process_item(self, item, spider):
+        solr_item = dict(item)
+        add_item(solr_item)
         return item

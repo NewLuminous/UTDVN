@@ -55,7 +55,7 @@ local_settings.py
 
 # Scrapy stuff:
 .scrapy
-.json # logs
+*.json # logs
 
 # pyenv
 .python-version

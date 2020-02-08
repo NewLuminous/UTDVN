@@ -14,6 +14,10 @@ BOT_NAME = 'UTDVN_crawler'
 SPIDER_MODULES = ['UTDVN_crawler.spiders']
 NEWSPIDER_MODULE = 'UTDVN_crawler.spiders'
 
+# Include path to modules in UTDVN_backend so they can be imported
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.abspath('.')) + '/UTDVN_backend')
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'UTDVN_crawler (+http://www.yourdomain.com)'
@@ -66,13 +70,14 @@ COOKIES_ENABLED = False
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'UTDVN_crawler.pipelines.DuplicatesPipeline': 300,
-    'UTDVN_crawler.pipelines.JsonExporterPipeline': 800,
+    #'UTDVN_crawler.pipelines.JsonExporterPipeline': 600,
+    'UTDVN_crawler.pipelines.SolrPipeline': 800,
 }
 FILE_NAME = 'export.json'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
-AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_ENABLED = False
 # The initial download delay
 AUTOTHROTTLE_START_DELAY = 2
 # The maximum download delay to be set in case of high latencies

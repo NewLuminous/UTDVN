@@ -42,7 +42,16 @@ root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py runserver 0.0.0.0
 ### Accessing phpMyAdmin
 - To access your MySQL user interface, go to http://localhost:8888
 
-- To empty a core, go to:
+## Adding test data
+
+- Once containers have started you can `exec` into `bash` in your `solr` container.
+```Shell
+$ docker-compose exec solr bash
+# Populate the 'test' core with some test data
+solr@c106f3a1a44c:/opt/solr-8.4.1$ post -c test example/exampledocs
 ```
-http://localhost:8983/solr/[CORE NAME]/update?stream.body=<delete><query>*:*</query></delete>&commit=true
+
+- To empty a core:
+```Shell
+$ docker-compose exec solr post -c [CORE NAME] -d "<delete><query>*:*</query></delete>"
 ```
