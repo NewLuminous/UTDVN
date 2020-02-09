@@ -19,6 +19,8 @@ script:
   # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
   # Will be removed when future versions of django-haystack support Django 3.0
   - bash ./fixs/web_haystack/script.sh
+  
+  - bash scripts/crawl.sh
   - python UTDVN_backend/manage.py test UTDVN_backend/UTDVN_database
   - python UTDVN_backend/manage.py test UTDVN_crawler
 

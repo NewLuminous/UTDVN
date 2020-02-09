@@ -24,7 +24,7 @@ SOLR_CORES = create_pysolr_cores(get_cores())
 
 def add_item(item, core_name=DEFAULT_CORE):
     # Adds item to Solr core
-    SOLR_CORES[core_name].add([item])
+    SOLR_CORES[core_name].add([item], commit=True)
     
 def search(query, core_name=DEFAULT_CORE):
     '''
