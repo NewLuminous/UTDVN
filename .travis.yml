@@ -3,15 +3,24 @@ language: python
 python:
   - 3.8
 
-services: 
+services:
   - docker
+  - mysql
 
 install:
-  - docker-compose up -d solr web
+  - docker-compose up -d solr
+  - pip install -r requirements.txt
+  - bash scripts/wait.sh "Solr" "curl localhost:8983/solr"
+
+before_script:
+  - mysql -e 'CREATE DATABASE test;' -u root
 
 script:
-  - docker-compose exec web python UTDVN_backend/manage.py test UTDVN_backend/UTDVN_database
-  - docker-compose exec web python UTDVN_backend/manage.py test UTDVN_crawler
+  # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
+  # Will be removed when future versions of django-haystack support Django 3.0
+  - bash ./fixs/web_haystack/script.sh
+  - python UTDVN_backend/manage.py test UTDVN_backend/UTDVN_database
+  - python UTDVN_backend/manage.py test UTDVN_crawler
 
 notifications:
   email:
