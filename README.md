@@ -18,17 +18,11 @@ Search engine service backed by Apache Solr, Django and Scrapy for undergraduate
 $ docker-compose up
 ```
 
-- Once containers have started you can `exec` into `bash` in your `web` container and configure a Django admin user, or run migrations.
+- Once containers have started you can `exec` into `bash` in your `web` container and configure a Django admin user.
 ```Shell
 $ docker-compose exec web bash
-# Now you should be in the web container, cd into UTDVN_backend
-root@de5d08a4ea6e:/home/utdvn# cd UTDVN_backend
-# Run migrations
-root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py migrate
 # Create Django admin user
-root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py createsuperuser
-# Start Django server
-root@de5d08a4ea6e:/home/utdvn/UTDVN_backend# python3 manage.py runserver 0.0.0.0:8000
+root@de5d08a4ea6e:/home/utdvn# python3 UTDVN_backend/manage.py createsuperuser
 ```
 
 ### Accessing Django

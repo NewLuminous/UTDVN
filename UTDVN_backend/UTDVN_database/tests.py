@@ -55,6 +55,5 @@ class CoresViewTests(TestCase):
     
     def test_get_method(self):
         response = self.client.get(reverse('UTDVN_database:cores'))
-        self.assertContains(response, "mycore")
         self.assertContains(response, "test")
         

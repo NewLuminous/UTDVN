@@ -4,17 +4,16 @@ python:
   - 3.8
 
 services: 
-  - mysql
+  - docker
 
 install:
-  - pip install -r requirements.txt
-
-before_script:
-  - mysql -e 'CREATE DATABASE test;' -u root
+  - docker-compose up -d solr web
 
 script:
-  # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
-  # Will be removed when future versions of django-haystack support Django 3.0
-  - bash ./fixs/web_haystack/script.sh
-  - python UTDVN_backend/manage.py test UTDVN_backend/UTDVN_database
-  - python UTDVN_backend/manage.py test UTDVN_crawler
+  - docker-compose exec web python UTDVN_backend/manage.py test UTDVN_backend/UTDVN_database
+  - docker-compose exec web python UTDVN_backend/manage.py test UTDVN_crawler
+
+notifications:
+  email:
+    on_success: change
+    on_failure: change
