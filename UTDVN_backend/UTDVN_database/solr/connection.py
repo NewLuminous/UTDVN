@@ -22,9 +22,9 @@ def create_pysolr_cores(core_names):
 
 SOLR_CORES = create_pysolr_cores(get_cores())
 
-def add_item(item, core_name=DEFAULT_CORE):
-    # Adds item to Solr core
-    SOLR_CORES[core_name].add([item], commit=True)
+def add_items(items, core_name=DEFAULT_CORE, commit=True):
+    # Adds items to Solr core
+    SOLR_CORES[core_name].add(items, commit=commit)
     
 def search(query, core_name=DEFAULT_CORE):
     '''

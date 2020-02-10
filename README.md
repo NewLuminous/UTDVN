@@ -1,5 +1,6 @@
 # UTDVN
 [![Build Status](https://api.travis-ci.org/newluminous/UTDVN.svg)](https://travis-ci.org/newluminous/UTDVN)
+[![Coverage Status](https://coveralls.io/repos/github/NewLuminous/UTDVN/badge.svg)](https://coveralls.io/github/NewLuminous/UTDVN)
 
 Search engine service backed by Apache Solr, Django and Scrapy for undergraduate theses and dissertations
 

@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.admindocs',
+    'django_nose',
     'UTDVN_database',
     'corsheaders',
     'haystack',
@@ -185,6 +186,18 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# Test runners
+# https://django-testing-docs.readthedocs.io/en/latest/coverage.html#configure-django-nose
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+
+NOSE_ARGS = [
+    '--with-coverage',
+    '--cover-package=UTDVN_database',
+    '--exe',
+    '--cover-erase',
+]
+
+NOSE_IGNORE_CONFIG_FILES = True,
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.0/topics/i18n/

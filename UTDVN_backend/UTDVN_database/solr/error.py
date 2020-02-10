@@ -27,10 +27,12 @@ class APIError(Exception):
         '''
         self.message = message
         self.error_type = error_type
-
-    def json(self):
-        error = {
+        
+    def args(self):
+        return {
             'message': self.message,
             'errorType': self.error_type.name,
         }
-        return json.dumps(error)
+
+    def json(self):
+        return json.dumps(self.args())

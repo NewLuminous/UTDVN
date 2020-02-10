@@ -4,7 +4,6 @@ from . import views
 
 app_name = 'UTDVN_database'
 urlpatterns = [
-    path('', views.IndexView.as_view(), name='index'),
     path('search/', views.search, name='search'),
     path('cores/', views.cores, name='cores'),
 ]

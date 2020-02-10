@@ -45,7 +45,16 @@ class JsonExporterPipeline(object):
     
 # Stores items in Solr
 class SolrPipeline(object):
+    def __init__(self):
+        self.solr_items = []
+        
+    def close_spider(self, spider):
+        add_items(self.solr_items)
+    
     def process_item(self, item, spider):
         solr_item = dict(item)
-        add_item(solr_item)
+        solr_item['author'] = solr_item['author'].replace(',', '')
+        solr_item['advisor'] = solr_item['advisor'].replace(',', '')
+        solr_item['id'] = solr_item['author'] + '_' + solr_item['title']
+        self.solr_items.append(solr_item)
         return item
