@@ -6,7 +6,7 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy.exceptions import DropItem
 from scrapy.exporters import JsonLinesItemExporter
-from UTDVN_database.solr.connection import add_item
+from UTDVN_database.solr.connection import add_items
 
 # Looks for duplicate items, and drop those items that were already processed
 class DuplicatesPipeline(object):

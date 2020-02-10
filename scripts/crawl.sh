@@ -7,6 +7,8 @@ usage="
     -t    set how long to run spiders for (in seconds)
 "
 
+set -e
+
 while getopts ':ht:' option; do
   case "$option" in
     h) echo "$usage"
