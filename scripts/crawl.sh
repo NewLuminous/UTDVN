@@ -7,8 +7,6 @@ usage="
     -t    set how long to run spiders for (in seconds)
 "
 
-set -e
-
 while getopts ':ht:' option; do
   case "$option" in
     h) echo "$usage"
@@ -29,7 +27,10 @@ done
 
 cd UTDVN_crawler
 if [ "$time" ]; then
-  python crawler.py & read -t $time ; kill $!
+  python crawler.py & sleep $time
+  cmdpid=$!
+  kill $!
+  wait $cmdpid
   echo 'Crawler run for ' $time ' seconds'
 else
   python crawler.py
