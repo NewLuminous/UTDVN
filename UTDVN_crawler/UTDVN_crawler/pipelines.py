@@ -13,7 +13,7 @@ class DuplicatesPipeline(object):
     def __init__(self):
         self.ids_seen = set()
         
-    def process_item(self, item):
+    def process_item(self, item, spider):
         if item['author'] + '_' + item['title'] in self.ids_seen:
             raise DropItem("Duplicate item found: %s" % item)
         else:
@@ -30,16 +30,16 @@ class JsonExporterPipeline(object):
         file_name = crawler.settings.get('FILE_NAME')
         return cls(file_name)
     
-    def open_spider(self):
+    def open_spider(self, spider):
         self.file = open(self.file_name, "wb")
         self.exporter = JsonLinesItemExporter(self.file)
         self.exporter.start_exporting()
         
-    def close_spider(self):
+    def close_spider(self, spider):
         self.exporter.finish_exporting()
         self.file.close()
     
-    def process_item(self, item):
+    def process_item(self, item, spider):
         self.exporter.export_item(item)
         return item
     
@@ -48,10 +48,10 @@ class SolrPipeline(object):
     def __init__(self):
         self.solr_items = []
         
-    def close_spider(self):
+    def close_spider(self, spider):
         connection.add_items(self.solr_items)
     
-    def process_item(self, item):
+    def process_item(self, item, spider):
         solr_item = dict(item)
         solr_item['author'] = solr_item['author'].replace(',', '')
         solr_item['advisor'] = solr_item['advisor'].replace(',', '')

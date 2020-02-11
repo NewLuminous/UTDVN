@@ -54,70 +54,70 @@ class DuplicatesPipelineTests(TestCase):
         self.item['title'] = 't'
         
         self.pipeline = DuplicatesPipeline()
-        self.pipeline.process_item(self.item)
+        self.pipeline.process_item(self.item, None)
         
     def test_process_item_with_none_item(self):
-        self.assertRaises(TypeError, self.pipeline.process_item, None)
+        self.assertRaises(TypeError, self.pipeline.process_item, None, None)
         
     def test_process_item_with_scrapy_item(self):
-        self.assertRaises(KeyError, self.pipeline.process_item, scrapy.Item())
+        self.assertRaises(KeyError, self.pipeline.process_item, scrapy.Item(), None)
         
     def test_process_item_with_no_author(self):
         item_no_author = Thesis()
         item_no_author['title'] = self.item['title']
         
-        self.assertRaises(KeyError, self.pipeline.process_item, item_no_author)
+        self.assertRaises(KeyError, self.pipeline.process_item, item_no_author, None)
         
     def test_process_item_with_no_title(self):
         item_no_title = Thesis()
         item_no_title['author'] = self.item['author']
         
-        self.assertRaises(KeyError, self.pipeline.process_item, item_no_title)
+        self.assertRaises(KeyError, self.pipeline.process_item, item_no_title, None)
         
     def test_process_item_with_duplicate_item(self):
-        self.assertRaises(DropItem, self.pipeline.process_item, self.item)
+        self.assertRaises(DropItem, self.pipeline.process_item, self.item, None)
         
     def test_process_item_with_clone(self):
         item_clone = Thesis()
         item_clone['author'] = 'a'
         item_clone['title'] = 't'
         
-        self.assertRaises(DropItem, self.pipeline.process_item, item_clone)
+        self.assertRaises(DropItem, self.pipeline.process_item, item_clone, None)
         
     def test_process_item_with_same_author(self):
         item_same_author = Thesis()
         item_same_author['author'] = self.item['author']
         item_same_author['title'] = self.item['title'] + self.item['title']
         
-        self.assertEqual(self.pipeline.process_item(item_same_author), item_same_author)
+        self.assertEqual(self.pipeline.process_item(item_same_author, None), item_same_author)
         
     def test_process_item_with_same_title(self):
         item_same_title = Thesis()
         item_same_title['author'] = self.item['author'] + self.item['author']
         item_same_title['title'] = self.item['title']
         
-        self.assertEqual(self.pipeline.process_item(item_same_title), item_same_title)
+        self.assertEqual(self.pipeline.process_item(item_same_title, None), item_same_title)
         
     def test_process_item_with_similar_item_with_empty_author(self):
         similar_item = Thesis()
         similar_item['author'] = ''
         similar_item['title'] = self.item['author'] + self.item['title']
         
-        self.assertEqual(self.pipeline.process_item(similar_item), similar_item)
+        self.assertEqual(self.pipeline.process_item(similar_item, None), similar_item)
         
     def test_process_item_with_similar_item_with_empty_title(self):
         similar_item = Thesis()
         similar_item['author'] = self.item['author'] + self.item['title']
         similar_item['title'] = ''
         
-        self.assertEqual(self.pipeline.process_item(similar_item), similar_item)
+        self.assertEqual(self.pipeline.process_item(similar_item, None), similar_item)
         
     def test_process_item_with_different_item(self):
         different_item = Thesis()
         different_item['author'] = self.item['title']
         different_item['title'] = self.item['author']
         
-        self.assertEqual(self.pipeline.process_item(different_item), different_item)
+        self.assertEqual(self.pipeline.process_item(different_item, None), different_item)
         
 class JsonExporterPipelineTests(TestCase):
     def setUp(self):
@@ -136,10 +136,10 @@ class JsonExporterPipelineTests(TestCase):
         item2['title'] = 't2'
         item2['author'] = 'a2'
         
-        self.pipeline.open_spider()
-        self.pipeline.process_item(item1)
-        self.pipeline.process_item(item2)
-        self.pipeline.close_spider()
+        self.pipeline.open_spider(None)
+        self.pipeline.process_item(item1, None)
+        self.pipeline.process_item(item2, None)
+        self.pipeline.close_spider(None)
         
         file_content = open(self.file_name, 'r').read()
         self.assertEqual(file_content, '{"title": "t1", "author": "a1"}\n{"title": "t2", "author": "a2"}\n')
@@ -158,8 +158,8 @@ class SolrPipelineTests(TestCase):
         item['title'] = 't'
         item['author'] = 'Nguyễn, Văn A'
         item['advisor'] = 'Trần, Thị B'
-        self.pipeline.process_item(item)
-        self.pipeline.close_spider()
+        self.pipeline.process_item(item, None)
+        self.pipeline.close_spider(None)
         
         args = connection.add_items.call_args[0][0][0]
         self.assertEqual(args['title'], 't')
