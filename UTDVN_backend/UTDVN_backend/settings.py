@@ -192,7 +192,7 @@ TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
 
 NOSE_ARGS = [
     '--with-coverage',
-    '--cover-package=UTDVN_database',
+    '--cover-package=UTDVN_database,UTDVN_crawler',
     '--exe',
     '--cover-erase',
 ]

@@ -6,18 +6,18 @@
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 from scrapy.exceptions import DropItem
 from scrapy.exporters import JsonLinesItemExporter
-from UTDVN_database.solr.connection import add_items
+from UTDVN_database.solr import connection
 
 # Looks for duplicate items, and drop those items that were already processed
 class DuplicatesPipeline(object):
     def __init__(self):
         self.ids_seen = set()
         
-    def process_item(self, item, spider):
-        if item['title'] + item['author'] in self.ids_seen:
+    def process_item(self, item):
+        if item['author'] + '_' + item['title'] in self.ids_seen:
             raise DropItem("Duplicate item found: %s" % item)
         else:
-            self.ids_seen.add(item['title'] + item['author'])
+            self.ids_seen.add(item['author'] + '_' + item['title'])
             return item
 
 # Exports items to a JSON file
@@ -30,16 +30,16 @@ class JsonExporterPipeline(object):
         file_name = crawler.settings.get('FILE_NAME')
         return cls(file_name)
     
-    def open_spider(self, spider):
+    def open_spider(self):
         self.file = open(self.file_name, "wb")
         self.exporter = JsonLinesItemExporter(self.file)
         self.exporter.start_exporting()
         
-    def close_spider(self, spider):
+    def close_spider(self):
         self.exporter.finish_exporting()
         self.file.close()
     
-    def process_item(self, item, spider):
+    def process_item(self, item):
         self.exporter.export_item(item)
         return item
     
@@ -48,10 +48,10 @@ class SolrPipeline(object):
     def __init__(self):
         self.solr_items = []
         
-    def close_spider(self, spider):
-        add_items(self.solr_items)
+    def close_spider(self):
+        connection.add_items(self.solr_items)
     
-    def process_item(self, item, spider):
+    def process_item(self, item):
         solr_item = dict(item)
         solr_item['author'] = solr_item['author'].replace(',', '')
         solr_item['advisor'] = solr_item['advisor'].replace(',', '')

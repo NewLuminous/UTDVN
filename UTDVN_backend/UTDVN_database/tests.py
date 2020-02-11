@@ -20,7 +20,8 @@ class ErrorTypeTests(TestCase):
         self.assertEqual(error.ErrorType(3).name, 'INVALID_SEARCH_TERM')
         
 class SolrAPIErrorTests(TestCase):
-    api_error = error.APIError('An error occurred', error.ErrorType(0))
+    def setUp(self):
+        self.api_error = error.APIError('An error occurred', error.ErrorType(0))
     
     def test_args(self):
         self.assertEqual(self.api_error.args(), {

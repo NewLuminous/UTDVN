@@ -17,7 +17,8 @@ NEWSPIDER_MODULE = 'UTDVN_crawler.spiders'
 # Include path to modules in UTDVN_backend so they can be imported
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.abspath('.')) + '/UTDVN_backend')
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.path.dirname(BASE_DIR) + '/UTDVN_backend')
 
 # Crawl responsibly by identifying yourself (and your website) on the user-agent
 #USER_AGENT = 'UTDVN_crawler (+http://www.yourdomain.com)'

@@ -2,6 +2,5 @@
 
 set -e
 
-cd UTDVN_backend
-python manage.py test
-coverage report -m --omit='*/tests.py','*/apps.py'
+python UTDVN_backend/manage.py test UTDVN_backend UTDVN_crawler
+coverage report -m --omit='*/tests.py','*/apps.py','*/middlewares.py','*/settings.py','*/crawler.py'
