@@ -1,0 +1,12 @@
+[run]
+omit = 
+    */settings.py   
+    UTDVN_backend/UTDVN_database/apps.py
+    UTDVN_crawler/UTDVN_crawler/middlewares.py
+
+[report]
+omit = 
+    */tests.py
+    */settings.py
+    UTDVN_backend/UTDVN_database/apps.py
+    UTDVN_crawler/UTDVN_crawler/middlewares.py

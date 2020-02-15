@@ -36,7 +36,7 @@ class VNUSpider(scrapy.Spider):
         item['title'] = extract_meta('title')
         item['author'] = extract_meta('creator')
         item['advisor'] = extract_meta('contributor')
-        item['publish_date'] = extract_meta('citation_date')
+        item['yearpub'] = extract_meta('citation_date')
         item['publisher'] = extract_meta('publisher')
         item['abstract'] = extract_meta('abstract')
         item['uri'] = extract_meta('identifier')

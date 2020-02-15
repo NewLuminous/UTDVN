@@ -3,14 +3,16 @@ from django.http import HttpResponse, JsonResponse
 from django.views import generic
 import pysolr
 from .solr import connection, error
+from UTDVN_backend.settings import HAYSTACK_CONNECTIONS
+
+SOLR = connection.SolrConnection(HAYSTACK_CONNECTIONS['default']['URL'])
+DEFAULT_CORE = 'thesis'
 
 # Create your views here.    
 def search(request):
     '''
     Takes a GET request containing a query and returns results from the
-    connected Solr instance. The request should contain the 'q' parameter with
-    a search term (i.e q=my_search_term), or a search phrase in double quotes
-    (i.e q="my search phrase").
+    connected Solr instance.
     '''
     if request.method != "GET":
         return HttpResponse(status=405)
@@ -24,7 +26,7 @@ def search(request):
         return JsonResponse(api_error.args(), status=400)
     
     try:
-        data = connection.search(query)
+        data = [__get_document(doc_details) for doc_details in SOLR.query(DEFAULT_CORE, query)['response']['docs']]
     except pysolr.SolrError as e:
         api_error = error.APIError(
             str(e),
@@ -50,4 +52,18 @@ def cores(request):
     if request.method != "GET":
         return HttpResponse(status=405)
     
-    return JsonResponse(connection.get_cores(), safe=False, status=200)
+    return JsonResponse(SOLR.get_core_names(), safe=False, status=200)
+
+def __get_document(doc_details):
+        """
+        Returns a simple dictionary from the given document details
+        """
+        attributes = ['id', 'type', 'title', 'author', 'description', 'updatedAt', 'yearpub', 
+                      'advisor', 'publisher', 'uri', 'file_url', 'language', 'keywords']
+        doc = {}
+    
+        for attr in attributes:
+            # In the Solr JSON responses, keys are strings and values are arrays
+            if attr in doc_details.keys() and len(doc_details[attr]) > 0:
+                doc[attr] = doc_details[attr][0]
+        return doc

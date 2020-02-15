@@ -11,7 +11,7 @@ class Thesis(scrapy.Item):
     title = scrapy.Field()
     author = scrapy.Field()
     advisor = scrapy.Field()
-    publish_date = scrapy.Field()
+    yearpub = scrapy.Field()
     publisher = scrapy.Field()
     abstract = scrapy.Field()
     uri = scrapy.Field()

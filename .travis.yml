@@ -20,6 +20,7 @@ script:
   # Will be removed when future versions of django-haystack support Django 3.0
   - bash ./fixs/web_haystack/script.sh
   
+  - bash scripts/create-cores.sh thesis
   - bash scripts/crawl.sh -t 60
   - bash scripts/test.sh
 
