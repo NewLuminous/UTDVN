@@ -10,6 +10,7 @@ services:
 install:
   - docker-compose up -d solr
   - pip install -r requirements.txt
+  - python scripts/nltk_setup.py
   - bash scripts/wait.sh "Solr" "curl localhost:8983/solr"
 
 before_script:

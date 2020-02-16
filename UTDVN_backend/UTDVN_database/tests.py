@@ -5,6 +5,7 @@ from .solr.connection import SolrConnection
 from .solr.error import APIError, ErrorType
 from .solr.models import *
 from .mocks import MockSolr, MockAdmin, MockResponse
+from UTDVN_database.views import SOLR
 
 class SolrConnectionTests(TestCase):
     
@@ -102,7 +103,6 @@ class SolrConnectionTests(TestCase):
                          {'test': [self.doc], 'something': [other_doc]})
         
     def test_query_with_test_core(self):
-        solr_connection = SolrConnection("http://solr:8983/solr")
         expected_response = {
             "response": {
                 "numFound":11,
@@ -134,7 +134,7 @@ class SolrConnectionTests(TestCase):
                 }
             }
         }
-        result = solr_connection.query('test', 'electronics', 'popularity:[5 TO *]', 
+        result = SOLR.query('test', 'electronics', 'popularity:[5 TO *]', 
                                        'popularity desc, price desc', 3, 3, 'name cat', 'cat', 'cat', True)
         
         self.assertEqual(result, expected_response)
@@ -280,21 +280,20 @@ class SearchViewTests(TestCase):
     def test_get_method_with_empty_core(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'core': "''", 'q': '*:*'})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json()['message'], 'Failed to connect to the Solr instance.')
+        self.assertEqual(response.json()['message'], 'The core "\'\'" was not found')
         self.assertEqual(response.json()['errorType'], ErrorType.SOLR_CONNECTION_ERROR.name)
         
     def test_get_method_with_non_existent_core(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'core': 'blahblah', 'q': '*:*'})
         self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json()['message'], 'Failed to connect to the Solr instance.')
+        self.assertEqual(response.json()['message'], 'The core "blahblah" was not found')
         self.assertEqual(response.json()['errorType'], ErrorType.SOLR_CONNECTION_ERROR.name)
         
     def test_get_method_without_param_q(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test','query': '*:*'})
         self.assertContains(response, 'id')
         self.assertContains(response, '_version_')
-        self.assertContains(response, 'cat')
-        self.assertContains(response, 'author')
+        self.assertContains(response, 'name')
         
     def test_get_method_with_null_query(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test', 'q': ''})
@@ -315,15 +314,15 @@ class SearchViewTests(TestCase):
     def test_get_method_with_valid_query(self):
         response = self.client.get(
             reverse('UTDVN_database:search'), 
-            {'core': 'test', 'q': 'cat:electronics', 'sort': 'popularity desc, price desc', 'start': 3, 'rows': 3}
+            {'core': 'test', 'q': 'cat:electronics', 'sort': 'popularity desc,price desc', 'start': 3, 'rows': 3}
         )
-        self.assertEqual(response.json()['response']['numFound'], 14)
-        self.assertEqual(response.json()['response']['start'], 3)
-        self.assertEqual(response.json()['response']['docs'][0]['id'], '9885A004')
-        self.assertEqual(response.json()['response']['docs'][0]['name'], ['Canon PowerShot SD500'])
+        self.assertEqual(response['data']['response']['numFound'], 14)
+        self.assertEqual(response['data']['response']['start'], 3)
+        self.assertEqual(response['data']['response']['docs'][0]['id'], '9885A004')
+        self.assertEqual(response['data']['response']['docs'][0]['name'], ['Canon PowerShot SD500'])
         
     def test_get_method_with_core_thesis(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'thesis', 'q': '*:*'})
+        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'thesis', 'q': 'ung thư'})
         self.assertContains(response, 'id')
         self.assertContains(response, 'type')
         self.assertContains(response, 'title')

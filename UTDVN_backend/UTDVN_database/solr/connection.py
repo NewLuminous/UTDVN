@@ -101,29 +101,31 @@ class SolrConnection(object):
         ----------
         core_name : string
             The name of the Solr core.
-        query : string
+        query : string, optional
             The query string.
-        filter_query : string
+             The default is '*:*'.
+        filter_query : string, optional
             Defines a query to restrict the superset of returned documents, 
             without influencing score.
             Example: '+popularity:[10 TO *] +section:0'
-        sort : string
+        sort : string, optional
             Sort field or function with asc|desc.
             Example: 'score desc, div(popularity,price) desc'
-        start : int
+        start : int, optional
             Number of leading documents to skip.
-        rows : int
+        rows : int, optional
             Number of documents to return after 'start'.
-        field_list : string
+        field_list : string, optional
             Limits the information included in a query response 
             to a specified list of fields.
             Example: 'id,sales_price:price,secret_sauce:product(price,popularity),score'
-        default_field : string
+        default_field : string, optional
             Default search field.
-        highlight_fields : string
+        highlight_fields : string, optional
             Fields to hightlight on.
-        omit_header : boolean
+        omit_header : bool, optional
             Whether or not Solr excludes the header from the returned results.
+            The default is True.
 
         Returns a response corresponding to the given query from Solr.
         -------
