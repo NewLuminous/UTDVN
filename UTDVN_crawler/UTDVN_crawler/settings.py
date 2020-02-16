@@ -27,7 +27,13 @@ sys.path.append(os.path.dirname(BASE_DIR) + '/UTDVN_backend')
 ROBOTSTXT_OBEY = True
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-#CONCURRENT_REQUESTS = 32
+CONCURRENT_REQUESTS = 32
+
+# Increase max thread pool size for DNS queries
+REACTOR_THREADPOOL_MAXSIZE = 20
+
+# Reduce download timeout to discard stuck requests quickly
+DOWNLOAD_TIMEOUT = 15
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay

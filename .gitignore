@@ -63,6 +63,7 @@ local_settings.py
 # Environments
 .env
 .venv
+.vscode
 env/
 venv/
 ENV/

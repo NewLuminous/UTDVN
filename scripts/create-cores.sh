@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 bash scripts/wait.sh "Solr" "curl -s http://localhost:8983/solr"
 
 echo "Creating cores"
