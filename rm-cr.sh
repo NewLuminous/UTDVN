@@ -1,0 +1,1 @@
+sed -i 's/\r$//' scripts/remove-cr.sh && bash scripts/remove-cr.sh

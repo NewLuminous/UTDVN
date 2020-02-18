@@ -2,53 +2,35 @@ version: '3.7'
 
 services:
   db:
-    image: mysql:8.0
+    build:
+      context: .
+      dockerfile: db.Dockerfile
     command: --default-authentication-plugin=mysql_native_password
     restart: always
     volumes:
       - db_data:/var/lib/mysql
-      # Fix "Authentication plugin 'caching_sha2_password' cannot be loaded" error in MySQL 8.0
-      - /fixs/db_cnf/custom.cnf:/etc/mysql/conf.d/custom.cnf
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: utdvn
     ports:
       - "3306:3306"
-      
-  phpmyadmin:
-    image: phpmyadmin/phpmyadmin
-    environment:
-      PMA_HOST: db
-      PMA_PORT: 3306
-    ports:
-      - "8888:80"
-    links:
-      - db
 
   solr:
-    image: solr:8.4
+    build:
+      context: .
+      dockerfile: solr.Dockerfile
     ports:
      - "8983:8983"
-    entrypoint:
-      - docker-entrypoint.sh
-      - solr-precreate
-      - test
+    entrypoint: [
+      "/opt/docker-solr/scripts/start-solr.sh",
+      "thesis",
+    ]
 
   web:
     image: newluminous/utdvn
     command: bash scripts/start-web.sh
     volumes:
       - .:/home/utdvn
-      # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
-      # Will be removed when future versions of django-haystack support Django 3.0
-      - ./fixs/web_haystack/backends__init__.py:/usr/local/lib/python3.8/site-packages/haystack/backends/__init__.py
-      - ./fixs/web_haystack/solr_backend.py:/usr/local/lib/python3.8/site-packages/haystack/backends/solr_backend.py
-      - ./fixs/web_haystack/highlight.py:/usr/local/lib/python3.8/site-packages/haystack/templatetags/highlight.py
-      - ./fixs/web_haystack/utils__init__.py:/usr/local/lib/python3.8/site-packages/haystack/utils/__init__.py
-      - ./fixs/web_haystack/loading.py:/usr/local/lib/python3.8/site-packages/haystack/utils/loading.py
-      - ./fixs/web_haystack/inputs.py:/usr/local/lib/python3.8/site-packages/haystack/inputs.py
-      - ./fixs/web_haystack/models.py:/usr/local/lib/python3.8/site-packages/haystack/models.py
-      - ./fixs/web_haystack/query.py:/usr/local/lib/python3.8/site-packages/haystack/query.py
     ports:
       - "8000:8000"
     depends_on:

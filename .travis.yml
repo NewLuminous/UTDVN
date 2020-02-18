@@ -10,8 +10,8 @@ services:
 install:
   - docker-compose up -d solr
   - pip install -r requirements.txt
-  - python scripts/nltk_setup.py
   - bash scripts/wait.sh "Solr" "curl localhost:8983/solr"
+  - python scripts/nltk_setup.py
 
 before_script:
   - mysql -e 'CREATE DATABASE test;' -u root
@@ -20,9 +20,7 @@ script:
   # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
   # Will be removed when future versions of django-haystack support Django 3.0
   - bash ./fixs/web_haystack/script.sh
-  
-  - docker-compose exec solr post -c test example/exampledocs
-  - docker-compose exec solr solr create -c thesis
+
   - bash scripts/crawl.sh -t 60
   - bash scripts/test.sh
 

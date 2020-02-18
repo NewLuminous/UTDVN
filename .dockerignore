@@ -1,0 +1,19 @@
+# Data backup
+db_data
+
+# Unit test / coverage reports
+**/.coverage
+**/nosetests.xml
+**/coverage.xml
+
+# Logging stuff
+**/*.log
+**/*.json
+
+# For windows to run bash
+scripts/remove-cr.sh
+rm-cr.sh
+
+# Others
+UTDVN_frontend
+README.md
