@@ -4,8 +4,10 @@ from unittest.mock import MagicMock, patch, call
 from .solr.connection import SolrConnection
 from .solr.error import APIError, ErrorType
 from .solr.models import *
+from .solr.query import Query
 from .mocks import MockSolr, MockAdmin, MockResponse
 from UTDVN_database.views import SOLR
+import json
 
 class SolrConnectionTests(TestCase):
     
@@ -196,7 +198,7 @@ class SolrModelsTests(TestCase):
         mock_solr.add_document.assert_called_with('thesis', self.args)
         
     def test_get_models_fields(self):
-        result = get_models_fields()
+        result = get_models_fields(['thesis'])
         self.assertEquals(result, ['id', 'type', 'title', 'author', 'description', 'updatedAt', 'yearpub',
                                    'advisor', 'publisher', 'uri', 'file_url', 'language', 'keywords'])
         
@@ -226,7 +228,7 @@ class SolrAPIErrorTests(TestCase):
         error = APIError(ErrorType(2), None)
         self.assertEqual(error.message, 'Solr returned an error response to the search query.')
         error = APIError(ErrorType(3), None)
-        self.assertEqual(error.message, 'Missing or incorrect search query.')
+        self.assertEqual(error.message, 'Must supply a query with the parameter "q".')
         error = APIError(ErrorType(4), None)
         self.assertEqual(error.message, 'Must supply an ID with the parameter "id".')
         
@@ -243,6 +245,94 @@ class SolrAPIErrorTests(TestCase):
     def test_json(self):
         self.assertEqual(self.error.json(), 
                          '{"errorType": "%s", "message": "An error occurred."}' % ErrorType(0).name)
+        
+class SolrQueryTests(TestCase):
+    def test_as_phrase_false_escape_false(self):
+        query = Query('formula:1+1=2', as_phrase=False)
+        self.assertEqual(str(query), 'formula:1+1=2')
+        
+    def test_as_phrase_false_escape_true(self):
+        query = Query('formula:1+1=2', as_phrase=False, escape=True)
+        self.assertEqual(str(query), 'formula\:1\+1=2')
+        
+    def test_as_phrase_true_escape_false(self):
+        query = Query('formula:1+1=2')
+        self.assertEqual(str(query), '"formula:1+1=2"')
+        
+    def test_as_phrase_true_escape_true(self):
+        query = Query('formula:1+1=2', escape=True)
+        self.assertEqual(str(query), '"formula\:1\+1=2"')
+        
+    def test_fuzz_with_invalid_factor(self):
+        with self.assertRaises(ValueError):
+            _ = Query('hello world').fuzz(3)
+        
+    def test_fuzz_with_valid_factor(self):
+        query = Query('hello world').fuzz(2)
+        self.assertEqual(str(query), '"hello world"~2')
+        
+    def test_boost_importance(self):
+        query = Query('hello world').boost_importance(7)
+        self.assertEqual(str(query), '("hello world")^7')
+        
+    def test_select_and(self):
+        query = Query('hello world').select_and(Query(', it \'s me!'))
+        self.assertEqual(str(query), '"hello world" AND ", it \'s me!"')
+        
+    def test_select_or(self):
+        query = Query('hello world').select_or(Query(', it \'s me!'))
+        self.assertEqual(str(query), '"hello world" OR ", it \'s me!"')
+        
+    def test_select_require_with_no_terms(self):
+        query = Query('hello world').select_require([])
+        self.assertEqual(str(query), '"hello world"')
+        
+    def test_select_require_with_some_terms(self):
+        query = Query('hello world').select_require(['term1', 'term2'])
+        self.assertEqual(str(query), '"hello world" +term1 +term2')
+        
+    def test_for_single_field_with_blank_field(self):
+        query = Query('hello world').for_single_field('')
+        self.assertEqual(str(query), '"hello world"')
+        
+    def test_for_single_field_with_not_blank_field(self):
+        query = Query('hello world').for_single_field('id')
+        self.assertEqual(str(query), 'id:"hello world"')
+        
+    def test_for_fields_with_fields_not_a_dict(self):
+        query = Query('hello world')
+        fields = 'not a dict'
+        with self.assertRaises(ValueError):
+            query.for_fields(fields)
+            
+        fields = ['not', 'a', 'dict']
+        with self.assertRaises(ValueError):
+            query.for_fields(fields)
+            
+        fields = '{"not": 1, "a": 2, "dict": 3}'
+        with self.assertRaises(ValueError):
+            query.for_fields(fields)
+            
+    def test_for_fields_with_fields_a_dict(self):
+        fields = {'id': 1, 'title': 10}
+        query = Query('hello world').for_fields(fields)
+        self.assertEqual(str(query), '"hello world" OR id:("hello world")^1 OR title:("hello world")^10')
+        
+    def test_sanitation(self):
+        query = Query('The quick brown fox jumped over 12 lazy dogs', sanitize=True)
+        self.assertEqual(str(query), '"quick brown fox jumped 12 lazy dogs"')
+        
+    def test_sanitation_with_query_str_full_of_garbage(self):
+        query = Query('but to and', sanitize=True)
+        self.assertEqual(str(query), '"but to and"')
+        
+    def test_sanitation_in_vietnamese(self):
+        query = Query('Con cáo nâu nhanh nhảy qua 12 chú chó lười', sanitize=True)
+        self.assertEqual(str(query), '"Con cáo nâu nhanh nhảy qua 12 chó lười"')
+        
+    def test_sanitation_with_query_str_full_of_garbage_in_vietnamese(self):
+        query = Query('nhưng để và', sanitize=True)
+        self.assertEqual(str(query), '"nhưng để và"')
 
 class CoresViewTests(TestCase):
     def test_post_method(self):
@@ -262,67 +352,97 @@ class SearchViewTests(TestCase):
     def test_get_method_without_params(self):
         response = self.client.get(reverse('UTDVN_database:search'))
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['message'], 'Missing or incorrect search query.')
         self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply a query with the parameter "q".')
         
-    def test_get_method_without_param_core(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*:*'})
+    def test_get_method_without_param_types(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*'})
+        self.assertEqual(response.status_code, 200)
+        for d in json.loads(response.content)['data']:
+            self.assertTrue(d['response']['numFound'] > 0)
+        
+    def test_get_method_with_null_types(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'types': '', 'q': '*'})
+        self.assertEqual(response.status_code, 200)
+        for d in json.loads(response.content)['data']:
+            self.assertTrue(d['response']['numFound'] > 0)
+        
+    def test_get_method_with_empty_types(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'types': "''", 'q': '*'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['message'], 'Missing or incorrect search query.')
         self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
+        self.assertEqual(response.json()['message'], "Invalid type(s) requested: ''")
         
-    def test_get_method_with_null_core(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': '', 'q': '*:*'})
+    def test_get_method_with_non_existent_types(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'types': 'blahblah', 'q': '*'})
         self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['message'], 'Missing or incorrect search query.')
         self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
-        
-    def test_get_method_with_empty_core(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': "''", 'q': '*:*'})
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json()['message'], 'The core "\'\'" was not found')
-        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_CONNECTION_ERROR.name)
-        
-    def test_get_method_with_non_existent_core(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'blahblah', 'q': '*:*'})
-        self.assertEqual(response.status_code, 500)
-        self.assertEqual(response.json()['message'], 'The core "blahblah" was not found')
-        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_CONNECTION_ERROR.name)
+        self.assertEqual(response.json()['message'], "Invalid type(s) requested: blahblah")
         
     def test_get_method_without_param_q(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test','query': '*:*'})
-        self.assertContains(response, 'id')
-        self.assertContains(response, '_version_')
-        self.assertContains(response, 'name')
+        response = self.client.get(reverse('UTDVN_database:search'), {'query': '*'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply a query with the parameter "q".')
         
     def test_get_method_with_null_query(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test', 'q': ''})
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.content, b'{"response": {"numFound": 0, "start": 0, "docs": []}}')
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': ''})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply a query with the parameter "q".')
         
     def test_get_method_with_empty_query(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test', 'q': "''"})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['message'], 'undefined field title')
-        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': "''"})
+        self.assertEqual(response.status_code, 200)
         
-    def test_get_method_with_wrong_syntax(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'test', 'q': '/'})
+    def test_get_method_with_special_character(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '/'})
+        self.assertEqual(response.status_code, 200)
+        
+    def test_get_method_with_non_existent_return_field(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'return': 'blahblah'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_SEARCH_REQUEST.name)
+        self.assertEqual(response.json()['message'], "Invalid return field(s) requested: blahblah")
+        
+    def test_get_method_sorting_by_a_text_field(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'sort': 'title asc'})
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        self.assertRegex(response.json()['message'], '^can not sort on multivalued field: title of type: text_general on core ')
         
-    def test_get_method_with_valid_query(self):
+    def test_get_method_with_wrong_sort_syntax(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'sort': 'updatedAt'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        self.assertRegex(response.json()['message'], "^Can't determine a Sort Order \(asc or desc\) in sort spec 'updatedAt'")
+        
+    def test_get_method_with_rows_not_a_number(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'rows': "'20'"})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        self.assertRegex(response.json()['message'], "^For input string: \"'20'\" on core ")
+        
+    def test_get_method_with_a_valid_query(self):
         response = self.client.get(
             reverse('UTDVN_database:search'), 
-            {'core': 'test', 'q': 'cat:electronics', 'sort': 'popularity desc,price desc', 'start': 3, 'rows': 3}
+            {'types':'thesis','q':'nghiên cứu','sort':'yearpub desc','start':1,'rows':20,'return':'yearpub,advisor'}
         )
-        self.assertEqual(response['data']['response']['numFound'], 14)
-        self.assertEqual(response['data']['response']['start'], 3)
-        self.assertEqual(response['data']['response']['docs'][0]['id'], '9885A004')
-        self.assertEqual(response['data']['response']['docs'][0]['name'], ['Canon PowerShot SD500'])
+        self.assertContains(response, 'id')
+        self.assertContains(response, 'type')
+        self.assertContains(response, 'title')
+        self.assertContains(response, 'author')
+        self.assertContains(response, 'description')
+        self.assertContains(response, 'updatedAt')
+        self.assertContains(response, 'yearpub')
+        self.assertContains(response, 'advisor')
+        self.assertNotContains(response, 'publisher')
+        self.assertNotContains(response, 'uri')
+        self.assertNotContains(response, 'language')
+        self.assertNotContains(response, 'keywords')
         
-    def test_get_method_with_core_thesis(self):
-        response = self.client.get(reverse('UTDVN_database:search'), {'core': 'thesis', 'q': 'ung thư'})
+    def test_get_method_with_core_thesis_without_param_return(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'types': 'thesis', 'q': '*'})
         self.assertContains(response, 'id')
         self.assertContains(response, 'type')
         self.assertContains(response, 'title')
@@ -335,3 +455,15 @@ class SearchViewTests(TestCase):
         self.assertContains(response, 'uri')
         self.assertContains(response, 'language')
         self.assertContains(response, 'keywords')
+        
+    def test_get_method_with_core_test(self):
+        response = self.client.get(
+            reverse('UTDVN_database:search'),
+            {'types':'test','q':'cat:electronics','sort':'popularity desc,price desc','start':3,'rows':3}
+        )
+        self.assertEqual(len(json.loads(response.content)['data']), 1)
+        d = json.loads(response.content)['data'][0]['response']
+        self.assertEqual(d['numFound'], 14)
+        self.assertEqual(d['start'], 3)
+        self.assertEqual(d['docs'][0]['id'], '9885A004')
+        self.assertEqual(d['docs'][0]['name'], ['Canon PowerShot SD500'])

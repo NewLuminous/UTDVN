@@ -60,8 +60,9 @@ class SolrThesis(SolrDocument):
         
 MODELS = [SolrThesis]
 
-def get_models_fields():
+def get_models_fields(type_list):
     fields = []
     for doc in [model.doc for model in MODELS]:
-        fields += [key for key, _ in doc.items() if key not in fields]
+        if doc['type'] in type_list:
+            fields += [key for key in doc.keys() if key not in fields]
     return fields

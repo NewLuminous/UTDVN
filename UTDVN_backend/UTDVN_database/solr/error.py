@@ -39,7 +39,7 @@ class APIError(Exception):
         elif error_type is ErrorType.SOLR_SEARCH_ERROR:
             self.message = 'Solr returned an error response to the search query.'
         elif error_type is ErrorType.INVALID_SEARCH_REQUEST:
-            self.message = 'Missing or incorrect search query.'
+            self.message = 'Must supply a query with the parameter "q".'
         elif error_type is ErrorType.INVALID_GETDOCUMENT_REQUEST:
             self.message = 'Must supply an ID with the parameter "id".'
         else:
