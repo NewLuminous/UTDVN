@@ -24,10 +24,12 @@ create_core:
 
 populate:
 	docker-compose exec solr post -c test example/exampledocs
+    
+crawl:
+	docker exec -it utdvn_web bash scripts/crawl.sh
 
 empty_core:
 	docker-compose exec solr post -c $(CORE_NAME) -d "<delete><query>*:*</query></delete>"
-
-start_solr:
-	docker-compose exec solr solr create_core -c test
-	docker-compose exec solr post -c test example/exampledocs
+    
+test:
+	docker exec -it utdvn_web bash scripts/test.sh

@@ -156,7 +156,7 @@ class SolrPipelineTests(TestCase):
         
     def test_process_thesis(self):
         item = Thesis()
-        item['title'] = 'sometitle'
+        item['title'] = 'some title'
         item['author'] = 'Nguyễn, Văn A'
         item['advisor'] = 'Trần, Thị B'
         item['yearpub'] = 2020
@@ -173,8 +173,9 @@ class SolrPipelineTests(TestCase):
         doc_type = args[0]
         doc = args[1]
         self.assertEqual(doc_type, 'thesis')
-        self.assertTrue('Nguyễn Văn A' in doc['id'])
-        self.assertTrue(item['title'] in doc['id'])
+        self.assertTrue('Nguyễn_Văn_A' in doc['id'])
+        self.assertTrue('some_title' in doc['id'])
+        self.assertFalse(' ' in doc['id'])
         self.assertEqual(doc['type'], 'thesis')
         self.assertEqual(doc['title'], item['title'])
         self.assertEqual(doc['author'], 'Nguyễn Văn A')

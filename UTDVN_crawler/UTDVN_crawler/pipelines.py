@@ -79,7 +79,7 @@ class SolrPipeline(object):
         Converts Thesis item to SolrThesis and commits it to Solr.
         """
         solr_doc = SolrThesis(
-            id=item['author'].replace(',', '') + '_' + item['title'],
+            id=(item['author'].replace(',', '') + ' ' + item['title']).replace(' ', '_'),
             type='thesis',
             title=item['title'],
             author=item['author'].replace(',', ''),

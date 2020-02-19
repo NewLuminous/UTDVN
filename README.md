@@ -11,7 +11,7 @@ Search engine service backed by Apache Solr, Django and Scrapy for undergraduate
 * [Usage](#usage)
   * [Accessing Django](#accessing-django)
   * [Accessing Solr](#accessing-solr)
-  * [Accessing phpMyAdmin](#accessing-phpMyAdmin)
+  * [Adding data to Solr to search in](#adding-data-to-solr-to-search-in)
 * [Testing](#testing)
 
 ## Useful Links

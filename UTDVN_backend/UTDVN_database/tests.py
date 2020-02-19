@@ -5,6 +5,7 @@ from .solr.connection import SolrConnection
 from .solr.error import APIError, ErrorType
 from .solr.models import *
 from .solr.query import Query
+from .solr import builder
 from .mocks import MockSolr, MockAdmin, MockResponse
 from UTDVN_database.views import SOLR
 import json
@@ -197,6 +198,10 @@ class SolrModelsTests(TestCase):
         self.model.add_to_solr(mock_solr)
         mock_solr.add_document.assert_called_with('thesis', self.args)
         
+    def test_get_models_fields_with_non_existent_type(self):
+        result = get_models_fields(['blah'])
+        self.assertEquals(result, [])
+        
     def test_get_models_fields(self):
         result = get_models_fields(['thesis'])
         self.assertEquals(result, ['id', 'type', 'title', 'author', 'description', 'updatedAt', 'yearpub',
@@ -208,7 +213,7 @@ class ErrorTypeTests(TestCase):
         self.assertEqual(ErrorType(1).name, 'SOLR_CONNECTION_ERROR')
         self.assertEqual(ErrorType(2).name, 'SOLR_SEARCH_ERROR')
         self.assertEqual(ErrorType(3).name, 'INVALID_SEARCH_REQUEST')
-        self.assertEqual(ErrorType(4).name, 'INVALID_GETDOCUMENT_REQUEST')
+        self.assertEqual(ErrorType(4).name, 'INVALID_DOCUMENT_REQUEST')
         with self.assertRaises(ValueError):
             print(ErrorType(5).name)
         
@@ -234,7 +239,7 @@ class SolrAPIErrorTests(TestCase):
         
     def test_init_with_none_errortype(self):
         with self.assertRaises(ValueError):
-            error = APIError(None, 'An error occurred.')
+            _ = APIError(None, 'An error occurred.')
     
     def test_args(self):
         self.assertEqual(self.error.args(), {
@@ -271,17 +276,38 @@ class SolrQueryTests(TestCase):
         query = Query('hello world').fuzz(2)
         self.assertEqual(str(query), '"hello world"~2')
         
+    def test_fuzz_with_factor_0(self):
+        query = Query('The quick brown fox jumped over 12 lazy dogs').fuzz(0)
+        self.assertEqual(str(query), '"The quick brown fox jumped over 12 lazy dogs"~0')
+        
+    def test_fuzz_with_factor_0_after_sanitization(self):
+        query = Query('The quick brown fox jumped over 12 lazy dogs', sanitize=True).fuzz(0)
+        self.assertEqual(str(query), '"quick brown fox jumped 12 lazy dogs"~2')
+        
     def test_boost_importance(self):
         query = Query('hello world').boost_importance(7)
         self.assertEqual(str(query), '("hello world")^7')
         
     def test_select_and(self):
         query = Query('hello world').select_and(Query(', it \'s me!'))
-        self.assertEqual(str(query), '"hello world" AND ", it \'s me!"')
+        self.assertEqual(str(query), '("hello world") AND (", it \'s me!")')
         
     def test_select_or(self):
         query = Query('hello world').select_or(Query(', it \'s me!'))
-        self.assertEqual(str(query), '"hello world" OR ", it \'s me!"')
+        self.assertEqual(str(query), '("hello world") OR (", it \'s me!")')
+        
+    def test_terms_with_multiple_AND_OR_operators(self):
+        query = Query('A').select_and(Query('B')).select_or(Query('C'))
+        self.assertEqual(str(query), '(("A") AND ("B")) OR ("C")')
+        
+        query = Query('A').select_and(Query('B').select_or(Query('C')))
+        self.assertEqual(str(query), '("A") AND (("B") OR ("C"))')
+        
+        query = (Query('A').select_or(Query('B'))).select_and(Query('C').select_or(Query('D')))
+        self.assertEqual(str(query), '(("A") OR ("B")) AND (("C") OR ("D"))')
+        
+        query = (Query('A').select_and(Query('B'))).select_or(Query('C').select_and(Query('D')))
+        self.assertEqual(str(query), '(("A") AND ("B")) OR (("C") AND ("D"))')
         
     def test_select_require_with_no_terms(self):
         query = Query('hello world').select_require([])
@@ -316,7 +342,10 @@ class SolrQueryTests(TestCase):
     def test_for_fields_with_fields_a_dict(self):
         fields = {'id': 1, 'title': 10}
         query = Query('hello world').for_fields(fields)
-        self.assertEqual(str(query), '"hello world" OR id:("hello world")^1 OR title:("hello world")^10')
+        self.assertEqual(
+            str(query), 
+            '("hello world") OR ((id:("hello world")^1) OR (title:("hello world")^10))'
+        )
         
     def test_sanitation(self):
         query = Query('The quick brown fox jumped over 12 lazy dogs', sanitize=True)
@@ -333,6 +362,136 @@ class SolrQueryTests(TestCase):
     def test_sanitation_with_query_str_full_of_garbage_in_vietnamese(self):
         query = Query('nhưng để và', sanitize=True)
         self.assertEqual(str(query), '"nhưng để và"')
+        
+class SolrBuilderTests(TestCase):
+    def setUp(self):
+        self.solr_cores = ['sc1', 'sc2', 'sc3']
+    
+    def test_build_core_with_no_cores(self):
+        self.assertEqual(builder.build_cores('', self.solr_cores), self.solr_cores)
+        
+    def test_build_core_with_one_valid_core(self):
+        self.assertEqual(builder.build_cores('sc1', self.solr_cores), ['sc1'])
+        
+    def test_build_core_with_core_test(self):
+        self.assertEqual(builder.build_cores('test', self.solr_cores), ['test'])
+        
+    def test_build_core_with_some_invalid_cores(self):
+        with self.assertRaises(ValueError):
+            builder.build_cores('test,dummy,sc3', self.solr_cores)
+            
+    def test_build_core_with_all_cores_invalid(self):
+        with self.assertRaises(ValueError):
+            builder.build_cores('test,dummy', self.solr_cores)
+            
+    def test_build_core_with_multiple_valid_cores(self):
+        self.assertEqual(builder.build_cores('sc1,sc3', self.solr_cores), ['sc1', 'sc3'])
+        
+    def test_build_return_fields_with_no_types(self):
+        with self.assertRaises(ValueError):
+            builder.build_return_fields('', [])
+        
+    def test_build_return_fields_with_non_existent_type(self):
+        with self.assertRaises(ValueError):
+            builder.build_return_fields('', ['blah'])
+            
+    def test_build_return_fields_with_core_test(self):
+        self.assertEqual(builder.build_return_fields('id,cat', ['test']), 'id,cat')
+        
+    def test_build_return_fields_with_param_fields_empty(self):
+        self.assertEqual(builder.build_return_fields('', ['thesis']), 'id,type,title,author,description,updatedAt,yearpub,advisor,publisher,uri,file_url,language,keywords')
+            
+    def test_build_return_fields_with_invalid_fields(self):
+        with self.assertRaises(ValueError):
+            builder.build_return_fields('id,blah', ['thesis'])
+            
+    def test_build_return_fields_with_valid_fields(self):
+        self.assertEqual(builder.build_return_fields('advisor', ['thesis']), 'id,title,author,description,updatedAt,advisor')
+        
+    def test_build_search_query_with_core_test(self):
+        self.assertEqual(builder.build_search_query('test', 'cat:electronics', {}), ('cat:electronics',{}))
+        
+    def test_build_search_query_with_search_term_in_core_thesis(self):
+        self.assertEqual(
+            builder.build_search_query('thesis', '1+1=2', {}),
+            (
+                '(1\+1=2) OR ((id:(1\+1=2)^1) OR ((title:(1\+1=2)^10) OR ' +
+                '((author:(1\+1=2)^5) OR ((description:(1\+1=2)^8) OR ' +
+                '((advisor:(1\+1=2)^5) OR ((publisher:(1\+1=2)^4) OR ' +
+                '(keywords:(1\+1=2)^6)))))))',
+                {'default_field':'title', 'highlight_fields':'title,description'}
+            )
+        )
+        
+    def test_build_search_query_with_search_all_in_core_thesis(self):
+        self.assertEqual(
+            builder.build_search_query('thesis', '*', {}),
+            (
+                '(*) OR ((id:(*)^1) OR ((title:(*)^10) OR ' +
+                '((author:(*)^5) OR ((description:(*)^8) OR ' +
+                '((advisor:(*)^5) OR ((publisher:(*)^4) OR ' +
+                '(keywords:(*)^6)))))))',
+                {'default_field':'title', 'highlight_fields':'title,description'}
+            )
+        )
+        
+    def test_build_search_query_with_search_number_in_core_thesis(self):
+        self.assertEqual(
+            builder.build_search_query('thesis', '2020', {}),
+            (
+                '(2020) OR ((id:(2020)^1) OR ((title:(2020)^10) OR ' +
+                '((author:(2020)^5) OR ((description:(2020)^8) OR ' +
+                '((advisor:(2020)^5) OR ((publisher:(2020)^4) OR ' +
+                '((keywords:(2020)^6) OR (yearpub:(2020)^1))))))))',
+                {'default_field':'title', 'highlight_fields':'title,description'}
+            )
+        )
+        
+    def test_build_search_query_with_search_phrase_in_core_thesis(self):
+        self.assertEqual(
+            builder.build_search_query('thesis', 'The world', {}),
+            (
+                '("world"~1) OR ((id:("world"~1)^1) OR ((title:("world"~1)^10) OR ' +
+                '((author:("world"~1)^5) OR ((description:("world"~1)^8) OR ' +
+                '((advisor:("world"~1)^5) OR ((publisher:("world"~1)^4) OR ' +
+                '(keywords:("world"~1)^6)))))))',
+                {'default_field':'title', 'highlight_fields':'title,description'}
+            )
+        )
+        
+    def test_build_document_query(self):
+        self.assertEqual(builder.build_document_query('1+1=2',{}), ('id:1\+1=2',{'default_field':'id'}))
+        
+    def test_flatten_doc_with_not_a_dict(self):
+        with self.assertRaises(ValueError):
+            builder.flatten_doc('{a dict: no}', '')
+        
+        with self.assertRaises(ValueError):
+            builder.flatten_doc(['not a dict'], '')
+            
+    def test_flatten_doc(self):
+        self.assertEqual(
+            builder.flatten_doc(
+                {
+                    'not_returned': ['nrt'],
+                    'returned': ['rt'],
+                    'list': ['l1', 'l2', 'l3'],
+                    'long_string': 'long',
+                    'character': 'c',
+                    'exception': ['except']
+                },
+                'returned,list,long_string,character,exception,not_in_doc',
+                ['exception']
+            ),
+            {
+                'not_returned': ['nrt'],
+                'returned': 'rt',
+                'list': ['l1', 'l2', 'l3'],
+                'long_string': 'long',
+                'character': 'c',
+                'exception': ['except']
+            }
+        )
 
 class CoresViewTests(TestCase):
     def test_post_method(self):
@@ -398,6 +557,12 @@ class SearchViewTests(TestCase):
     def test_get_method_with_special_character(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'q': '/'})
         self.assertEqual(response.status_code, 200)
+        
+    def test_get_method_with_back_slash(self):
+        response = self.client.get(reverse('UTDVN_database:search'), {'q': '\\'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        self.assertRegex(response.json()['message'], "^org.apache.solr.search.SyntaxError: Cannot parse ")
         
     def test_get_method_with_non_existent_return_field(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'return': 'blahblah'})
@@ -467,3 +632,110 @@ class SearchViewTests(TestCase):
         self.assertEqual(d['start'], 3)
         self.assertEqual(d['docs'][0]['id'], '9885A004')
         self.assertEqual(d['docs'][0]['name'], ['Canon PowerShot SD500'])
+        
+class DocumentViewTests(TestCase):
+    def setUp(self):
+        self.existing_id = 'Đặng_Ngọc_Anh_Xây_dựng_phương_pháp_định_lượng_flurbiprofen_trong_dược_phẩm'
+    
+    def test_post_method(self):
+        response = self.client.post(reverse('UTDVN_database:document'))
+        self.assertEqual(response.status_code, 405)
+        
+    def test_get_method_without_params(self):
+        response = self.client.get(reverse('UTDVN_database:document'))
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply an ID with the parameter "id".')
+        
+    def test_get_method_without_param_types(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'id': self.existing_id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)['data']['doc']['id'], self.existing_id)
+        
+    def test_get_method_with_null_types(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'types': '', 'id': self.existing_id})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)['data']['doc']['id'], self.existing_id)
+        
+    def test_get_method_with_empty_types(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'types': "''", 'id': self.existing_id})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], "Invalid type(s) requested: ''")
+        
+    def test_get_method_with_non_existent_types(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'types': 'blahblah', 'id': self.existing_id})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], "Invalid type(s) requested: blahblah")
+        
+    def test_get_method_without_param_id(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'query': '*'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply an ID with the parameter "id".')
+        
+    def test_get_method_with_null_id(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'id': ''})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], 'Must supply an ID with the parameter "id".')
+        
+    def test_get_method_with_empty_id(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'id': "''"})
+        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.content, b'Document not found')
+        
+    def test_get_method_with_back_slash_id(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'id': '\\'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
+        self.assertRegex(response.json()['message'], "^org.apache.solr.search.SyntaxError: Cannot parse 'id:\\\\': Lexical error ")
+        
+    def test_get_method_with_non_existent_return_field(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'id': self.existing_id, 'return': 'blahblah'})
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()['errorType'], ErrorType.INVALID_DOCUMENT_REQUEST.name)
+        self.assertEqual(response.json()['message'], "Invalid return field(s) requested: blahblah")
+        
+    def test_get_method_with_a_valid_id(self):
+        response = self.client.get(
+            reverse('UTDVN_database:document'), 
+            {'types':'thesis','id':self.existing_id,'return':'yearpub,advisor'}
+        )
+        self.assertContains(response, 'id')
+        self.assertContains(response, 'type')
+        self.assertContains(response, 'title')
+        self.assertContains(response, 'author')
+        self.assertContains(response, 'description')
+        self.assertContains(response, 'updatedAt')
+        self.assertContains(response, 'yearpub')
+        self.assertContains(response, 'advisor')
+        self.assertNotContains(response, 'publisher')
+        self.assertNotContains(response, 'uri')
+        self.assertNotContains(response, 'language')
+        self.assertNotContains(response, 'keywords')
+        
+    def test_get_method_with_core_thesis_without_param_return(self):
+        response = self.client.get(reverse('UTDVN_database:document'), {'types': 'thesis', 'id':self.existing_id})
+        self.assertContains(response, 'id')
+        self.assertContains(response, 'type')
+        self.assertContains(response, 'title')
+        self.assertContains(response, 'author')
+        self.assertContains(response, 'description')
+        self.assertContains(response, 'updatedAt')
+        self.assertContains(response, 'yearpub')
+        self.assertContains(response, 'advisor')
+        self.assertContains(response, 'publisher')
+        self.assertContains(response, 'uri')
+        self.assertContains(response, 'language')
+        self.assertContains(response, 'keywords')
+        
+    def test_get_method_with_core_test(self):
+        response = self.client.get(
+            reverse('UTDVN_database:document'),
+            {'types':'test','id':'9885A004'}
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.content)['data']['doc']['id'], '9885A004')
+        self.assertEqual(json.loads(response.content)['data']['doc']['name'], ['Canon PowerShot SD500'])

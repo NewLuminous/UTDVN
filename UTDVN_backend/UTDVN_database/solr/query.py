@@ -41,6 +41,7 @@ class Query(object):
         Initializes a Query.
         """
         self.query_str = query_str
+        self.deleted_words = 0
 
         if escape:
             self._escape_special_chars()
@@ -59,13 +60,17 @@ class Query(object):
     
     def fuzz(self, factor):
         '''
-        "Fuzzes" the query by a given factor where 0 <= factor <=2.
+        "Fuzzes" the query by a given factor where 0 < factor <=2.
+        If given factor is 0, it is actomatically set to the number of deleted words during sanitization.
         Acts differently depending on whether the query is a phrase or not.
         For phrases, this factor determines how far about the words of a phrase can be found.
         For terms, this factor determines how many insertions/deletions will still return a match.
         '''
         if factor < 0 or factor > 2:
             raise ValueError('Factor must be between 0 and 2.')
+        
+        if factor == 0:
+            factor = self.deleted_words
 
         return Query('%s~%d' % (self.query_str, factor), as_phrase=False)
     
@@ -79,13 +84,13 @@ class Query(object):
         """
         Returns new Query joining this query and another query with an AND select.
         """
-        return Query('%s AND %s' % (self.query_str, str(query)), as_phrase=False)
+        return Query('(%s) AND (%s)' % (self.query_str, str(query)), as_phrase=False)
 
     def select_or(self, query):
         """
         Returns new Query joining this query and another query with an OR select.
         """
-        return Query('%s OR %s' % (self.query_str, str(query)), as_phrase=False)
+        return Query('(%s) OR (%s)' % (self.query_str, str(query)), as_phrase=False)
 
     def select_require(self, terms):
         """
@@ -179,4 +184,8 @@ class Query(object):
                     words_list.append(tags[0][index].replace('_', ' '))
                     
         new_query_str = ' '.join(words_list)
-        self.query_str = new_query_str if len(new_query_str)>0 else self.query_str
+        if len(new_query_str) == 0:
+            new_query_str = self.query_str
+            
+        self.deleted_words += len(self.query_str.split()) - len(new_query_str.split())
+        self.query_str = new_query_str

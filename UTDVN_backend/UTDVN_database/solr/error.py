@@ -14,7 +14,7 @@ class ErrorType(Enum):
     # Occurs when a query is missing/incorrect in a search request.
     INVALID_SEARCH_REQUEST = 3
     # Occurs when something is missing/incorrect in a getdocument request.
-    INVALID_GETDOCUMENT_REQUEST = 4
+    INVALID_DOCUMENT_REQUEST = 4
 
 class APIError(Exception):
     '''
@@ -40,7 +40,7 @@ class APIError(Exception):
             self.message = 'Solr returned an error response to the search query.'
         elif error_type is ErrorType.INVALID_SEARCH_REQUEST:
             self.message = 'Must supply a query with the parameter "q".'
-        elif error_type is ErrorType.INVALID_GETDOCUMENT_REQUEST:
+        elif error_type is ErrorType.INVALID_DOCUMENT_REQUEST:
             self.message = 'Must supply an ID with the parameter "id".'
         else:
             raise ValueError('Invalid error type. Must be one of ErrorTypes.')
