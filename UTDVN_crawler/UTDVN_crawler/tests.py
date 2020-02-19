@@ -2,11 +2,12 @@ import os
 import scrapy
 from django.test import TestCase 
 from UTDVN_crawler.spiders.vnu_spider import VNUSpider
+from UTDVN_crawler.spiders.crawled_data_loader import CrawledDataLoader
 from UTDVN_crawler import mocks
 from UTDVN_crawler.pipelines import DuplicatesPipeline, JsonExporterPipeline, SolrPipeline
 from UTDVN_crawler.items import Thesis
 from scrapy.exceptions import DropItem
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch, mock_open, call
 
 class VNUSpiderTests(TestCase):
     def setUp(self):
@@ -45,6 +46,15 @@ class VNUSpiderTests(TestCase):
             self.assertTrue('file_url' in item.keys())
             self.assertEqual(item['language'], 'vi')
             self.assertTrue('keywords' in item.keys())
+            
+class CrawledDataLoaderTests(TestCase):
+    def setUp(self):
+        self.spider = CrawledDataLoader()
+        
+    def test_parse(self):
+        response = mocks.mock_response('/test_data/test.json')
+        item_list = [item for item in self.spider.parse(response)]
+        self.assertEqual(item_list, [{'author': 'a1', 'title': 't1'}, {'author': 'a2', 'title': 't2'}])
             
 class DuplicatesPipelineTests(TestCase):
     def setUp(self):
@@ -126,13 +136,13 @@ class DuplicatesPipelineTests(TestCase):
         
 class JsonExporterPipelineTests(TestCase):
     def setUp(self):
-        self.file_name = 'test.json'
-        self.pipeline = JsonExporterPipeline(self.file_name)
+        self.pipeline = JsonExporterPipeline()
+        self.spider = mocks.MockSpider('test')
         
-    def tearDown(self):
-        os.remove(self.file_name)
+    @patch('builtins.open')
+    def test_process_item(self, mock_open):
+        mock_open.return_value = mock_open()
         
-    def test_process_item(self):
         item1 = Thesis()
         item1['title'] = 't1'
         item1['author'] = 'a1'
@@ -141,13 +151,14 @@ class JsonExporterPipelineTests(TestCase):
         item2['title'] = 't2'
         item2['author'] = 'a2'
         
-        self.pipeline.open_spider(None)
-        self.pipeline.process_item(item1, None)
-        self.pipeline.process_item(item2, None)
-        self.pipeline.close_spider(None)
+        self.pipeline.open_spider(self.spider)
+        self.pipeline.process_item(item1, self.spider)
+        self.pipeline.process_item(item2, self.spider)
+        self.pipeline.close_spider(self.spider)
         
-        file_content = open(self.file_name, 'r').read()
-        self.assertEqual(file_content, '{"title": "t1", "author": "a1"}\n{"title": "t2", "author": "a2"}\n')
+        self.assertEqual(
+            mock_open().write.call_args_list, 
+            [call(b'{"title": "t1", "author": "a1"}\n'), call(b'{"title": "t2", "author": "a2"}\n')])
      
 class SolrPipelineTests(TestCase):
     def setUp(self):

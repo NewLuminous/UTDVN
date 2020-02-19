@@ -8,7 +8,6 @@ db_data
 
 # Logging stuff
 **/*.log
-**/*.json
 
 # For windows to run bash
 scripts/remove-cr.sh

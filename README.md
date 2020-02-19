@@ -58,13 +58,14 @@ $ docker-compose exec web python3 UTDVN_backend/manage.py createsuperuser
 - To query a core named "test", go to http://localhost:8983/solr/#/test/query
 
 ### Adding data to Solr to search in
+- To add data that are already crawled:
 ```Shell
-$ docker-compose exec web bash scripts/crawl.sh
+$ docker-compose exec web bash scripts/add-crawled-data.sh
 ```
 
-or just (if possible)
+- To crawl latest data and add them to Solr (might have to wait)
 ```Shell
-$ bash scripts/crawl.sh
+$ docker-compose exec web bash scripts/crawl.sh
 ```
 
 ## Testing

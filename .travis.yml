@@ -21,7 +21,7 @@ script:
   # Will be removed when future versions of django-haystack support Django 3.0
   - bash ./fixs/web_haystack/script.sh
 
-  - bash scripts/crawl.sh -t 60
+  - bash scripts/add-crawled-data.sh
   - bash scripts/test.sh
 
 after_script:

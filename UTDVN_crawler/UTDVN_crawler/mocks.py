@@ -17,3 +17,7 @@ def mock_response(file_path, url=None):
     )
     
     return response
+    
+class MockSpider(object):
+    def __init__(self, name):
+        self.name = name

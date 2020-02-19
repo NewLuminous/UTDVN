@@ -24,7 +24,7 @@ sys.path.append(os.path.dirname(BASE_DIR) + '/UTDVN_backend')
 #USER_AGENT = 'UTDVN_crawler (+http://www.yourdomain.com)'
 
 # Obey robots.txt rules
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
 CONCURRENT_REQUESTS = 32
@@ -80,7 +80,6 @@ ITEM_PIPELINES = {
     #'UTDVN_crawler.pipelines.JsonExporterPipeline': 600,
     'UTDVN_crawler.pipelines.SolrPipeline': 800,
 }
-FILE_NAME = 'export.json'
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html

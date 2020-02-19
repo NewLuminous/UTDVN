@@ -31,25 +31,21 @@ class JsonExporterPipeline(object):
     Exports items to a JSON file
     """
     
-    def __init__(self, file_name):
-        self.file_name = file_name
-        
-    @classmethod
-    def from_crawler(cls, crawler):
-        file_name = crawler.settings.get('FILE_NAME')
-        return cls(file_name)
+    def __init__(self):
+        self.files = {}
+        self.exporters = {}
     
-    def open_spider(self, spider=None):
-        self.file = open(self.file_name, "wb")
-        self.exporter = JsonLinesItemExporter(self.file)
-        self.exporter.start_exporting()
+    def open_spider(self, spider):
+        self.files[spider.name] = open('UTDVN_crawler/crawled_data/%s.json' % spider.name, "wb")
+        self.exporters[spider.name] = JsonLinesItemExporter(self.files[spider.name])
+        self.exporters[spider.name].start_exporting()
         
-    def close_spider(self, spider=None):
-        self.exporter.finish_exporting()
-        self.file.close()
+    def close_spider(self, spider):
+        self.exporters[spider.name].finish_exporting()
+        self.files[spider.name].close()
     
-    def process_item(self, item, spider=None):
-        self.exporter.export_item(item)
+    def process_item(self, item, spider):
+        self.exporters[spider.name].export_item(item)
         return item
     
 class SolrPipeline(object):
