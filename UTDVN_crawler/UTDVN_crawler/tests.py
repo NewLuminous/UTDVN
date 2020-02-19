@@ -50,10 +50,14 @@ class VNUSpiderTests(TestCase):
 class CrawledDataLoaderTests(TestCase):
     def setUp(self):
         self.spider = CrawledDataLoader()
+    
+    @patch('scrapy.Request')
+    def test_start_requests(self, mock_request):
+        self.assertEqual(self.spider.start_requests(), [mock_request()])
         
     def test_parse(self):
         response = mocks.mock_response('/test_data/test.json')
-        item_list = [item for item in self.spider.parse(response)]
+        item_list = [item for item in self.spider.parse(response, 'thesis')]
         self.assertEqual(item_list, [{'author': 'a1', 'title': 't1'}, {'author': 'a2', 'title': 't2'}])
             
 class DuplicatesPipelineTests(TestCase):
