@@ -70,6 +70,10 @@ def build_search_query(core, query_str, base_kwargs):
         query = query.for_fields(fields)
         kwargs['default_field'] = 'title'
         kwargs['highlight_fields'] = 'title,description'
+        
+        sortable_text_fields = ['title', 'author', 'advisor', 'type', 'publisher', 'language']
+        for field in sortable_text_fields:
+            kwargs['sort'] = kwargs['sort'].replace(field, field + '_str')
     else:
         #'test' core
         query = Query(query_str, as_phrase=False)

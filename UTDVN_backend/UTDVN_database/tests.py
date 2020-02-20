@@ -413,49 +413,68 @@ class SolrBuilderTests(TestCase):
         
     def test_build_search_query_with_search_term_in_core_thesis(self):
         self.assertEqual(
-            builder.build_search_query('thesis', '1+1=2', {}),
+            builder.build_search_query('thesis', '1+1=2', {'sort':''}),
             (
                 '(1\+1=2) OR ((id:(1\+1=2)^1) OR ((title:(1\+1=2)^10) OR ' +
                 '((author:(1\+1=2)^5) OR ((description:(1\+1=2)^8) OR ' +
                 '((advisor:(1\+1=2)^5) OR ((publisher:(1\+1=2)^4) OR ' +
                 '(keywords:(1\+1=2)^6)))))))',
-                {'default_field':'title', 'highlight_fields':'title,description'}
+                {'default_field':'title', 'highlight_fields':'title,description', 'sort':''}
             )
         )
         
     def test_build_search_query_with_search_all_in_core_thesis(self):
         self.assertEqual(
-            builder.build_search_query('thesis', '*', {}),
+            builder.build_search_query('thesis', '*', {'sort':''}),
             (
                 '(*) OR ((id:(*)^1) OR ((title:(*)^10) OR ' +
                 '((author:(*)^5) OR ((description:(*)^8) OR ' +
                 '((advisor:(*)^5) OR ((publisher:(*)^4) OR ' +
                 '(keywords:(*)^6)))))))',
-                {'default_field':'title', 'highlight_fields':'title,description'}
+                {'default_field':'title', 'highlight_fields':'title,description', 'sort':''}
             )
         )
         
     def test_build_search_query_with_search_number_in_core_thesis(self):
         self.assertEqual(
-            builder.build_search_query('thesis', '2020', {}),
+            builder.build_search_query('thesis', '2020', {'sort':''}),
             (
                 '(2020) OR ((id:(2020)^1) OR ((title:(2020)^10) OR ' +
                 '((author:(2020)^5) OR ((description:(2020)^8) OR ' +
                 '((advisor:(2020)^5) OR ((publisher:(2020)^4) OR ' +
                 '((keywords:(2020)^6) OR (yearpub:(2020)^1))))))))',
-                {'default_field':'title', 'highlight_fields':'title,description'}
+                {'default_field':'title', 'highlight_fields':'title,description', 'sort':''}
             )
         )
         
     def test_build_search_query_with_search_phrase_in_core_thesis(self):
         self.assertEqual(
-            builder.build_search_query('thesis', 'The world', {}),
+            builder.build_search_query('thesis', 'The world', {'sort':''}),
             (
                 '("world"~1) OR ((id:("world"~1)^1) OR ((title:("world"~1)^10) OR ' +
                 '((author:("world"~1)^5) OR ((description:("world"~1)^8) OR ' +
                 '((advisor:("world"~1)^5) OR ((publisher:("world"~1)^4) OR ' +
                 '(keywords:("world"~1)^6)))))))',
-                {'default_field':'title', 'highlight_fields':'title,description'}
+                {'default_field':'title', 'highlight_fields':'title,description', 'sort':''}
+            )
+        )
+        
+    def test_build_search_query_with_sort_in_core_thesis(self):
+        self.assertEqual(
+            builder.build_search_query(
+                'thesis', '*', 
+                {'sort':'title asc, type asc, id desc, updatedAt desc, yearpub desc'}
+            ),
+            (
+                '(*) OR ((id:(*)^1) OR ((title:(*)^10) OR ' +
+                '((author:(*)^5) OR ((description:(*)^8) OR ' +
+                '((advisor:(*)^5) OR ((publisher:(*)^4) OR ' +
+                '(keywords:(*)^6)))))))',
+                {
+                    'default_field':'title', 
+                    'highlight_fields':'title,description', 
+                    'sort':'title_str asc, type_str asc, id desc, updatedAt desc, yearpub desc'
+                }
             )
         )
         
@@ -572,9 +591,7 @@ class SearchViewTests(TestCase):
         
     def test_get_method_sorting_by_a_text_field(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'sort': 'title asc'})
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()['errorType'], ErrorType.SOLR_SEARCH_ERROR.name)
-        self.assertRegex(response.json()['message'], '^can not sort on multivalued field: title of type: text_general on core ')
+        self.assertEqual(response.status_code, 200)
         
     def test_get_method_with_wrong_sort_syntax(self):
         response = self.client.get(reverse('UTDVN_database:search'), {'q': '*', 'sort': 'updatedAt'})
