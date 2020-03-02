@@ -4,7 +4,7 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d db solr
+	docker-compose up -d db solr frontend
 
 dev:
 	docker-compose run --rm --name utdvn_web -p 8000:8000 web
