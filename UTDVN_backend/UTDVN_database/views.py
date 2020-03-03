@@ -1,7 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views import generic
-import pysolr
 from .solr import connection, builder
 from .solr.error import APIError, ErrorType
 from UTDVN_backend.settings import HAYSTACK_CONNECTIONS

@@ -4,10 +4,13 @@ build:
 	docker-compose build
 
 up:
-	docker-compose up -d db solr frontend
+	docker-compose up -d db solr
 
 dev:
 	docker-compose run --rm --name utdvn_web -p 8000:8000 web
+
+dev_front:
+	docker-compose run --rm --name utdvn_frontend -p 8080:8080 frontend
 
 down:
 	docker-compose down

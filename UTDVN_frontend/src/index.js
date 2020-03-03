@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import "./App.css";
-import App from "./App.jsx";
+import App from "./components/App.jsx";
+import Client from "./client.jsx";
 
-ReactDOM.render(<App/>, document.getElementById("root"));
+const BASE_URL = 'http://localhost:8000/api';
+var client = new Client(BASE_URL);
+
+ReactDOM.render(<App client={client}/>, document.getElementById("root"));
