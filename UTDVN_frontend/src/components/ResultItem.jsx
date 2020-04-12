@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '../styles.js';
 import PropTypes from 'prop-types';
 
 export default class ResultItem extends React.Component {
@@ -18,16 +19,16 @@ export default class ResultItem extends React.Component {
             return index % 2 == 1 ? (<b key={chunk + index}>{chunk}</b>) : chunk;
         });
         return (
-            <p>{chunks}</p>
+            <p style={styles.description}>{chunks}</p>
         )
     }
 
     render() {
         const title = this.highlight(this.props.title);
         return (
-            <div className='container' key={this.props.id}>
-                <a href={this.props.id}>{title}</a>
-                <p>{this.props.author}</p>
+            <div className='container' key={this.props.id} style={styles.itemsContainer}>
+                <a href={this.props.id} style={styles.title}>{title}</a>
+                <p style={styles.sideTitle}>{this.props.author}</p>
                 {this.highlight(this.props.description)}
             </div>
         )

@@ -1,4 +1,5 @@
 import React from 'react';
+import styles from '../styles.js';
 import PropTypes from 'prop-types';
 import Client from '../client.jsx';
 import ResultList from './ResultList.jsx';
@@ -132,8 +133,8 @@ export default class SearchForm extends React.Component {
 
     render() {
         return (
-            <div className='input-group'>
-                <div className='input-group add-on'>
+            <div className='input-group' style={styles.searchContainer}>
+                <div className='input-group add-on' style={styles.inputContainer}>
                     <input
                         id='search-input'
                         className='form-control'
@@ -147,7 +148,8 @@ export default class SearchForm extends React.Component {
                         <button
                             className='btn btn-primary'
                             type='button'
-                            onClick={this.handleSubmit} >
+                            onClick={this.handleSubmit} 
+                            style={styles.searchBtn}>
                             <i className='glyphicon glyphicon-search'></i>
                         </button>
                     </div>
