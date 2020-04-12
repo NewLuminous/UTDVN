@@ -3,6 +3,7 @@
 [![Coverage Status](https://coveralls.io/repos/github/NewLuminous/UTDVN/badge.svg)](https://coveralls.io/github/NewLuminous/UTDVN)
 
 Search engine service backed by Apache Solr, Django and Scrapy for undergraduate theses and dissertations
+with a React frontend
 
 ## Table of contents
 
@@ -78,4 +79,9 @@ $ docker-compose exec solr post -c test opt/solr/example/exampledocs
 - To empty a core:
 ```Shell
 $ docker-compose exec solr post -c [CORE NAME] -d "<delete><query>*:*</query></delete>"
+```
+
+- To test the frontend:
+```Shell
+$ yarn jest --coverage
 ```

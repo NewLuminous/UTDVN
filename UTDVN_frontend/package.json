@@ -1,7 +1,7 @@
 {
   "name": "utdvn_frontend",
-  "version": "0.1.0",
-  "description": "",
+  "version": "0.2.0",
+  "description": "Search Engine Service",
   "author": "NewL",
   "license": "ISC",
   "main": "index.js",
@@ -32,7 +32,8 @@
     "@babel/preset-react": "^7.8.3"
   },
   "scripts": {
-    "start": "webpack-dev-server"
+    "start": "webpack-dev-server",
+    "test-coverage": "yarn jest --coverage && cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
   },
   "eslintConfig": {
     "extends": "react-app"
@@ -48,5 +49,11 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "jest": {
+    "setupFilesAfterEnv": [
+      "./jestSetup.js"
+    ],
+    "collectCoverage": true
   }
 }

@@ -1,31 +1,44 @@
-language: python
+matrix:
+  include:
+    - language: python
 
-python:
-  - 3.8
+      python:
+        - 3.8
 
-services:
-  - docker
-  - mysql
+      services:
+        - docker
+        - mysql
 
-install:
-  - docker-compose up -d solr
-  - pip install -r requirements.txt
-  - bash scripts/wait.sh "Solr" "curl localhost:8983/solr"
-  - python scripts/nltk_setup.py
+      install:
+        - docker-compose up -d solr
+        - pip install -r requirements.txt
+        - bash scripts/wait.sh "Solr" "curl localhost:8983/solr"
+        - python scripts/nltk_setup.py
 
-before_script:
-  - mysql -e 'CREATE DATABASE test;' -u root
+      before_script:
+        - mysql -e 'CREATE DATABASE test;' -u root
 
-script:
-  # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
-  # Will be removed when future versions of django-haystack support Django 3.0
-  - bash ./fixs/web_haystack/script.sh
+      script:
+        # Fix outdated Haystack ('django.utils.six' module was removed from django-3.0 onwards, use 'six' instead)
+        # Will be removed when future versions of django-haystack support Django 3.0
+        - bash ./fixs/web_haystack/script.sh
 
-  - bash scripts/add-crawled-data.sh
-  - bash scripts/test.sh
+        - bash scripts/add-crawled-data.sh
+        - bash scripts/test.sh
 
-after_script:
-  - coveralls
+      after_script:
+        - coveralls
+
+    - language: node_js
+
+      node_js:
+        - 10
+
+      before_install:
+        - cd UTDVN_frontend
+
+      script:
+        - yarn test-coverage
 
 notifications:
   email:

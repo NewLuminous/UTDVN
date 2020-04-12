@@ -27,7 +27,6 @@ export default class ResultItem extends React.Component {
         return (
             <div className='container' key={this.props.id}>
                 <a href={this.props.id}>{title}</a>
-                <br />
                 <p>{this.props.author}</p>
                 {this.highlight(this.props.description)}
             </div>
