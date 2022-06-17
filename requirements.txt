@@ -9,4 +9,4 @@ mysqlclient==1.4.6
 nltk==3.4.5
 pysolr==3.8.1
 pyvi==0.0.9.7
-Scrapy==1.8.0
+Scrapy==2.6.1
